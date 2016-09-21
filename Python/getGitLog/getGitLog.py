@@ -93,7 +93,7 @@ class GetGitLog():
                     num1 = self.parseInput(temp.group(1))
                     num2 = self.parseInput(temp.group(2))
                     if num1 != None and num2 != None:
-                        os.system('git diff %s %s' % (num1, num2))
+                        os.system('git diff %s %s' % (num2, num1))
                     else:
                         print '%s or %s is over the border' % (temp.group(1), temp.group(2))
                     raw_input("Do anything to return:")
@@ -103,7 +103,7 @@ class GetGitLog():
                         num1 = self.parseInput(temp.group(1))
                         num2 = self.parseInput(str(int(temp.group(1)) + 1))
                         if num1 != None and num2 != None:
-                            os.system('git diff %s %s' % (num1, num2))
+                            os.system('git diff %s %s' % (num2, num1))
                         else:
                             print '%s is over the border' % (temp.group(1))
                         raw_input("Do anything to return:")
