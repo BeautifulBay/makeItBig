@@ -12,12 +12,12 @@ sys.setdefaultencoding('utf-8')
 class ParseSubtitle():
     def __init__(self, subtitle, savefile):
         self.subtitle = subtitle
-        self.savefile1 = savefile
-        self.savefile2 = os.path.splitext(savefile)[0] + '_en_cn' + os.path.splitext(savefile)[1]
-        self.savefile3 = os.path.splitext(savefile)[0] + '_en' + os.path.splitext(savefile)[1]
-        self.savefile4 = os.path.splitext(savefile)[0] + '_cn' + os.path.splitext(savefile)[1]
+        try:
+            mfile = open(subtitle, 'r')
+        except IOError, e:
+            print e
+            sys.exit()
 
-        mfile = open(subtitle, 'r')
         temp = mfile.read()
 
         self.encode = chardet.detect(temp)['encoding'].lower()
@@ -26,6 +26,21 @@ class ParseSubtitle():
         if self.encode != 'utf-8':
             # class inner function is called by inner function
             self.transferFileEncode(self.subtitle, self.encode, 'utf-8')
+
+        self.savefile1 = savefile
+        self.savefile2 = os.path.splitext(savefile)[0] + '_en_cn' + os.path.splitext(savefile)[1]
+        self.savefile3 = os.path.splitext(savefile)[0] + '_en' + os.path.splitext(savefile)[1]
+        self.savefile4 = os.path.splitext(savefile)[0] + '_cn' + os.path.splitext(savefile)[1]
+
+        self.savefile1 = os.path.split(self.savefile1)[0] + '/' + os.path.split(os.path.split(self.savefile1)[0])[1] + '/' + os.path.split(self.savefile1)[1]
+        self.savefile2 = os.path.split(self.savefile2)[0] + '/' + os.path.split(os.path.split(self.savefile2)[0])[1] + '_en_cn/' + os.path.split(self.savefile2)[1]
+        self.savefile3 = os.path.split(self.savefile3)[0] + '/' + os.path.split(os.path.split(self.savefile3)[0])[1] + '_en/' + os.path.split(self.savefile3)[1]
+        self.savefile4 = os.path.split(self.savefile4)[0] + '/' + os.path.split(os.path.split(self.savefile4)[0])[1] + '_cn/' + os.path.split(self.savefile4)[1]
+
+        for path in [self.savefile1, self.savefile2, self.savefile3, self.savefile4]:
+            if not os.path.isdir(os.path.split(path)[0]):
+                print 'Creat %s' % os.path.split(path)[0]
+                os.mkdir(os.path.split(path)[0])
 
     def transferFileEncode(self, filePath, fromCode, toCode):
         rFile = open(filePath, 'r');
@@ -124,8 +139,8 @@ class ParseSubtitle():
             print "%s can not be parsed" % self.subtitle
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print "Usage: %s xxx.ass/xxx.srt savefile" % sys.argv[0]
+    if len(sys.argv) < 3:
+        print "Usage: %s xxx/xxx.ass/.srt yyy/savefile" % sys.argv[0]
         sys.exit()
     item = ParseSubtitle(sys.argv[1], sys.argv[2])
     item.parseType()
