@@ -7,11 +7,16 @@ import time
 import sys
 
 class GetGitLog():
-    def __init__(self):
-        pass
+    def __init__(self, argv):
+        self.argv = argv
 
     def getLog(self):
-        self.fullLogFile = os.popen('git log')
+        if self.argv != None:
+            temp = re.match(r'(.*=)(.*)', self.argv)
+            print r'git log %s"%s"' % (temp.group(1), temp.group(2))
+            self.fullLogFile = os.popen('git log %s"%s"' % (temp.group(1), temp.group(2)))
+        else:
+            self.fullLogFile = os.popen('git log')
 	
     def parseSaveLog(self):
         self.logList = []
@@ -55,7 +60,10 @@ class GetGitLog():
     def printStatus(self):
         print 'index   content\n'
         for x in self.logList:
-            print '%5s %15s %s %s' % (x[0], x[2], x[3], x[4]),
+            if len(x) > 4:
+                print '%5s %5s %15s %s %s' % (x[0], x[1], x[2], x[3], x[4]),
+            else:
+                print '%5s %15s %s' % (x[0], x[2], x[3]),
             print
 	
     def checkGitDir(self):
@@ -120,7 +128,10 @@ class GetGitLog():
         return None
 
 if __name__ == "__main__":
-    operator = GetGitLog()
+    if len(sys.argv) > 1:
+        operator = GetGitLog(sys.argv[1])
+    else:
+        operator = GetGitLog(None)
     operator.getLog()
     operator.parseSaveLog()
     if operator.checkGitDir() == None:
