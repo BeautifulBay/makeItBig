@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+
+import serial
+import sys
+import os
+
+class MiniSerial:
+	def __init__(self, sFile):
+		self.sFile = sFile
+		self.choice = None
+
+	def saveSerialLog(self):
+		if self.sFile != None:
+			if os.path.exists(self.sFile) and os.path.getsize(self.sFile):
+				print "\033[33m%s is not an empty file!" % sys.argv[1]
+				print "1-->quit"
+				print "2-->overwrite"
+				print "3-->append\033[0m"
+				self.choice = raw_input("Enter a number:")
+				if self.choice != '2' and self.choice != '3':
+					sys.exit()
+			try:
+				if self.choice == '2':
+					self.sFile = open(sys.argv[1], 'w')
+				else :
+					self.sFile = open(sys.argv[1], 'a+')
+			except:
+				print '\033[31mCan not open %s\033[0m' % self.sFile
+				sys.exit()
+
+	def miniSerialRun(self):
+		try:
+			self.ser = serial.Serial('/dev/ttyUSB0', 115200)
+		except:
+			print '\033[31mCan not open %s\033[0m' % '/dev/ttyUSB0'
+			sys.exit()
+			
+		while True:
+			try:
+				line = self.ser.readline()
+				print line,
+				if self.sFile:
+					self.sFile.write(line);
+			except KeyboardInterrupt:
+				if self.choice == '2' or self.choice == '3' and self.sFile != None:
+					self.sFile.close()
+				self.ser.close()
+				print '\033[32mexiting...\033[0m'
+				sys.exit()
+
+if __name__ == '__main__':
+	if len(sys.argv) > 1 :
+		mOperator = MiniSerial(sys.argv[1])
+	else :
+		mOperator = MiniSerial(None)
+	mOperator.saveSerialLog()
+	mOperator.miniSerialRun()
+
+		
+
