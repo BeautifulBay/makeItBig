@@ -1,18 +1,23 @@
 #!/usr/bin/env python
+# -*- utf-8 -*-
 
 import serial
 import sys
 import os
+import re
+import getopt
 
 class MiniSerial:
-	def __init__(self, sFile):
-		self.sFile = sFile
+	def __init__(self, sFile, sGrep):
+		self.sFilePath = sFile
+		self.sGrep = sGrep
+		self.sFile = None
 		self.choice = None
 
 	def saveSerialLog(self):
-		if self.sFile != None:
-			if os.path.exists(self.sFile) and os.path.getsize(self.sFile):
-				print "\033[33m%s is not an empty file!" % sys.argv[1]
+		if self.sFilePath != None:
+			if os.path.exists(self.sFilePath) and os.path.getsize(self.sFilePath):
+				print "\033[33m%s is not an empty file!" % self.sFilePath
 				print "1-->quit"
 				print "2-->overwrite"
 				print "3-->append\033[0m"
@@ -21,16 +26,18 @@ class MiniSerial:
 					sys.exit()
 			try:
 				if self.choice == '2':
-					self.sFile = open(sys.argv[1], 'w')
+					self.sFile = open(self.sFilePath, 'w')
 				else :
-					self.sFile = open(sys.argv[1], 'a+')
+					self.sFile = open(self.sFilePath, 'a+')
+
 			except:
-				print '\033[31mCan not open %s\033[0m' % self.sFile
+				print '\033[31mCan not open %s\033[0m' % self.sFilePath
 				sys.exit()
 
 	def miniSerialRun(self):
 		try:
 			self.ser = serial.Serial('/dev/ttyUSB0', 115200)
+			print '\033[32mUart log is being captured ...\033[0m'
 		except:
 			print '\033[31mCan not open %s\033[0m' % '/dev/ttyUSB0'
 			sys.exit()
@@ -38,23 +45,50 @@ class MiniSerial:
 		while True:
 			try:
 				line = self.ser.readline()
-				print line,
+				if self.sGrep:
+					match = re.compile("^(.*)(%s)(.*)$" % self.sGrep).match(line)
+					if match:
+						print "%s\033[31m%s\033[0m%s" % (match.group(1), match.group(2), match.group(3))
+				else:
+					print line,
+
 				if self.sFile:
 					self.sFile.write(line);
 			except KeyboardInterrupt:
-				if self.choice == '2' or self.choice == '3' and self.sFile != None:
+				if self.sFile:
 					self.sFile.close()
+					print '\033[32mUart log has been saved in \'%s\'\033[0m' % self.sFilePath
 				self.ser.close()
 				print '\033[32mexiting...\033[0m'
 				sys.exit()
 
+def usage():
+	print '\033[31m',
+	print 'Usage:'
+	print 'sudo Uart'
+	print 'sudo Uart -f fileName   : fileName is a file that you want to save log in'
+	print 'sudo Uart -g grepString : grepString is a string that you want to filter'
+	print 'Ctrl c to exit',
+	print '\033[0m'
+
 if __name__ == '__main__':
-	if len(sys.argv) > 1 :
-		mOperator = MiniSerial(sys.argv[1])
-	else :
-		mOperator = MiniSerial(None)
+	try:
+		options,args = getopt.getopt(sys.argv[1:], "hf:g:", ["help"])
+	except getopt.GetoptError:
+		usage()
+		sys.exit()
+
+	mFile = None
+	mGrep = None
+	for name,value in options:
+		if name in ("-h","--help"):
+			usage()
+			sys.exit()
+		if name in ("-f"):
+			mFile = value
+		if name in ("-g"):
+			mGrep = value
+
+	mOperator = MiniSerial(mFile, mGrep)
 	mOperator.saveSerialLog()
 	mOperator.miniSerialRun()
-
-		
-
