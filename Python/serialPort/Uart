@@ -7,6 +7,19 @@ import os
 import re
 import getopt
 
+def printFunc(color, message):
+	if color == 'red':
+		colorNum = 31
+	elif color == 'green':
+		colorNum = 32
+	elif color == 'blue':
+		colorNum = 34
+	elif color == 'purple':
+		colorNum = 35
+	else:
+		colorNum = 31
+	print '\033[%dm%s\033[0m' % (colorNum, message)
+
 class MiniSerial:
 	def __init__(self, sFile, sGrep):
 		self.sFilePath = sFile
@@ -17,12 +30,17 @@ class MiniSerial:
 	def saveSerialLog(self):
 		if self.sFilePath != None:
 			if os.path.exists(self.sFilePath) and os.path.getsize(self.sFilePath):
-				print "\033[33m%s is not an empty file!" % self.sFilePath
-				print "1-->quit"
-				print "2-->overwrite"
-				print "3-->append\033[0m"
-				self.choice = raw_input("Enter a number:")
-				if self.choice != '2' and self.choice != '3':
+				printFunc('red',
+				"%s is not an empty file!\n" % self.sFilePath +
+				"1-->quit\n" +
+				"2-->overwrite\n" +
+				"3-->append")
+				try:
+					self.choice = raw_input("Enter a number:")
+					if self.choice != '2' and self.choice != '3':
+						sys.exit()
+				except KeyboardInterrupt, e:
+					printFunc('red', e.message)
 					sys.exit()
 			try:
 				if self.choice == '2':
@@ -31,15 +49,15 @@ class MiniSerial:
 					self.sFile = open(self.sFilePath, 'a+')
 
 			except:
-				print '\033[31mCan not open %s\033[0m' % self.sFilePath
+				printFunc('red', 'Can not open %s' % self.sFilePath)
 				sys.exit()
 
 	def miniSerialRun(self):
 		try:
 			self.ser = serial.Serial('/dev/ttyUSB0', 115200)
-			print '\033[32mUart log is being captured ...\033[0m'
+			printFunc('green', 'Uart log is being captured ...')
 		except:
-			print '\033[31mCan not open %s\033[0m' % '/dev/ttyUSB0'
+			printFunc('red', 'Can not open %s' % '/dev/ttyUSB0')
 			sys.exit()
 			
 		while True:
@@ -54,22 +72,22 @@ class MiniSerial:
 
 				if self.sFile:
 					self.sFile.write(line);
-			except KeyboardInterrupt:
+			except (KeyboardInterrupt, serial.SerialException), e:
+				printFunc('red', e.message)
 				if self.sFile:
 					self.sFile.close()
-					print '\033[32mUart log has been saved in \'%s\'\033[0m' % self.sFilePath
+					printFunc('green', 'Uart log has been saved in \'%s\'' % self.sFilePath)
 				self.ser.close()
-				print '\033[32mexiting...\033[0m'
+				printFunc('green', 'exiting...')
 				sys.exit()
 
 def usage():
-	print '\033[31m',
-	print 'Usage:'
-	print 'sudo Uart'
-	print 'sudo Uart -f fileName   : fileName is a file that you want to save log in'
-	print 'sudo Uart -g grepString : grepString is a string that you want to filter'
-	print 'Ctrl c to exit',
-	print '\033[0m'
+	printFunc('red',
+	'Usage:\n' +
+	'sudo Uart\n' +
+	'sudo Uart -f fileName   : fileName is a file that you want to save log in\n' +
+	'sudo Uart -g grepString : grepString is a string that you want to filter\n' +
+	'Ctrl c to exit')
 
 if __name__ == '__main__':
 	try:
